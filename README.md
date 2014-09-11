@@ -1,4 +1,6 @@
-Nestview is a web-based viewer for nested data - folder hierarchies, XML, whatever you can represent as a hierarchy of text nodes. If you need an idea of what it looks like, take a look at [Nested](http://orteil.dashnet.org/nested).
+Nestview is a web-based viewer for nested data - folder hierarchies, XML, whatever you can represent as a hierarchy of text nodes. It's inspired by [Nested](http://orteil.dashnet.org/nested).
+
+![Screenshot of Nestview rendering an OPML document](http://i.imgur.com/WJxhitJ.png)
 
 ### Architecture
 
