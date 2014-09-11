@@ -67,7 +67,7 @@ class NVXml(NVCommon):
 			print("GET: " + self.args.file, file=sys.stderr)
 			r = requests.get(self.args.file)
 			if r.status_code != 200:
-				raise Exception("status " + str(r.status_code) + " encountered wile accessing " + self.args.file)
+				raise Exception(str(r.status_code) + ": " + self.args.file)
 			root = etree.fromstring(r.text)
 		else:
 			# throw file into etree, either as a file object or filename
