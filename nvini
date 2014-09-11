@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+from __future__ import print_function
+from nestview import Folder, nvWrite
+from nvcommon import NVCommon
+from ConfigParser import SafeConfigParser
+import sys, os
+
+# generates a data array
+def main(inifile):
+	# create the top-level data array to hold Folders
+	data = []
+	# open the ini file
+	conf = SafeConfigParser()
+	if(type(inifile) == file):
+		conf.readfp(inifile)
+	else:
+		conf.read(os.path.abspath(os.path.expanduser(inifile)))
+	# get sections and loop over them
+	sections = conf.sections()
+	for section in sections:
+		secf = Folder(section, [], [])
+		for name, value in conf.items(section):
+			optf = Folder(name, [], [value])
+			secf.add(optf)
+		# tree out the section folder
+		data.append(secf.toTree())
+	return data
+
+# subclass and extend NVCommon
+class NVIni(NVCommon):
+	def setupArgumentParser(self):
+		self.parser.add_argument("file", metavar="FILE",
+			default=sys.stdin, nargs="?",
+			help="the INI file to open (defaults to standard input)")
+
+	def generateData(self):
+		# wrap around the main() function
+		return main(self.args.file)
+
+# instance and run
+nvini = NVIni("NVIni", "0.1", "An INI file viewer for Nestview.")
+nvini.run()

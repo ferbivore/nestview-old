@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+from __future__ import print_function
+from nestview import Folder
+from nvcommon import NVCommon
+import sys, os, io
+
+def folderListFromDict(d):
+	return [Folder(key, [], [val]) for key, val in d.iteritems()]
+
+def folderFromElement(elem, textattrib=False):
+	subfolders = []
+	textelems = []
+	# get attributes as folder
+	if(len(elem.attrib) > 0):
+		if textattrib:
+			for key, val in elem.attrib.iteritems():
+				textelems.append(key + " = " + val)
+		else:
+			attribFolder = Folder("(attributes)", folderListFromDict(elem.attrib), [])
+			subfolders = [attribFolder]
+	# loop over immediate children
+	for subelement in list(elem):
+		subfolders.append(folderFromElement(subelement, textattrib))
+	# get tag name without namespace
+	if "{" in elem.tag:
+		tagname = elem.tag.rpartition("}")[2]
+	else:
+		tagname = elem.tag
+	# text elements
+	if elem.text and elem.text.strip() != "":
+		textelems.append(elem.text)
+	if elem.tail and elem.tail.strip() != "":
+		textelems.append(elem.tail)
+	# return the completed folder
+	return Folder(tagname, subfolders, textelems)
+
+class NVXml(NVCommon):
+	def setupArgumentParser(self):
+		self.parser.add_argument("file", metavar="FILE",
+			default=sys.stdin, nargs="?",
+			help="the XML file to open (defaults to standard input)")
+		self.parser.add_argument("-T", "--textattrib", action="store_true",
+			help="show attributes as text instead of a hierarchy")
+		self.parser.add_argument("--html", action="store_true",
+			help="parse in HTML mode (requires lxml)")
+		self.parser.add_argument("-u", "--url", action="store_true",
+			help="open FILE as a URL (requires requests)")
+
+	def setupFinal(self):
+		# load up lxml.html as etree if --html is specified
+		import lxml.html as etree
+
+	def generateData(self):
+		# imports
+		if self.args.html:
+			import lxml.html as etree
+		else:
+			import xml.etree.ElementTree as etree
+			try:
+				import xml.etree.cElementTree as etree
+				import lxml.etree as etree
+			except ImportError:
+				pass
+		if self.args.url:
+			import requests
+			# grab the file and throw it into etree
+			print("GET: " + self.args.file, file=sys.stderr)
+			r = requests.get(self.args.file)
+			if r.status_code != 200:
+				raise Exception("status " + str(r.status_code) + " encountered wile accessing " + self.args.file)
+			root = etree.fromstring(r.text)
+		else:
+			# throw file into etree, either as a file object or filename
+			if(type(self.args.file) == file):
+				root = etree.fromstring(self.args.file.read())
+			else:
+				tree = etree.parse(self.args.file)
+				root = tree.getroot()
+		# create a folder from the root
+		folder = folderFromElement(root, self.args.textattrib)
+		data = [folder.toTree()]
+		return data
+
+nvxml = NVXml("NVXml", "1.0", "An XML and HTML viewer for Nestview.")
+nvxml.run()

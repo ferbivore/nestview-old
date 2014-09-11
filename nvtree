@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+from __future__ import print_function
+from nestview import Folder
+from nvcommon import NVCommon
+import sys, os
+
+# helper functions for filesystem navigation
+def subfolders(d):
+	return filter(os.path.isdir, [os.path.join(d, f) for f in os.listdir(d)])
+def files(d):
+	return filter(os.path.isfile, [os.path.join(d, f) for f in os.listdir(d)])
+
+# populates a folder object with the actual filesystem structure at path
+# TODO: document this thing, really, it's ugly
+def populate(path, folderobject, excludes, quiet=False):
+	for exclude in excludes:
+		if exclude in path:
+			if not quiet:
+				print("excluding: " + path, file=sys.stderr)
+			return
+	if not quiet:
+		print("analyzing: " + path, file=sys.stderr)
+	for sfname in subfolders(path):
+		shortname = os.path.split(sfname)[1]
+		sfobject = folderobject.add(Folder(shortname, [], []))
+		populate(os.path.abspath(sfname), sfobject, excludes, quiet)
+	for fname in files(path):
+		shortname = os.path.split(fname)[1]
+		folderobject.add(shortname)
+
+# main function - writes the filesystem tree to a Nestview HTML file
+def main(basepath, excludes = [], quiet=False):
+	# do some processing on the basepath
+	basepath = os.path.abspath(os.path.expanduser(basepath))
+	# create the topmost folder object and populate() it
+	basefolder = Folder(basepath, [], [])
+	populate(basepath, basefolder, excludes, quiet)
+	# convert it to a Nestview tree
+	tree = basefolder.toTree()
+	# return the top-level array Nestview expects
+	return [tree]
+
+# subclass and extend NVCommon
+class NVTree(NVCommon):
+	def setupArgumentParser(self):
+		# add nvtree-specific arguments
+		self.parser.add_argument("directory", metavar="DIRECTORY",
+			default=os.getcwd(), nargs="?",
+			help="the directory to list")
+		self.parser.add_argument("-e", "--exclude", metavar="EXCLUDE",
+			default=[], nargs="+",
+			help="filename substrings to exclude from the listing")
+	
+	def generateData(self):
+		# wrap around the main() function
+		return main(self.args.directory, self.args.exclude, self.args.quiet)
+
+# run the thing
+nvtree = NVTree("NVTree", "1.0", "A directory tree viewer for Nestview.")
+nvtree.run()
