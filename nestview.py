@@ -32,7 +32,7 @@ class Folder:
 def getDefaultSrc():
 	# finds the default template, nestview..min.html
 	scriptPath = os.path.dirname(os.path.realpath(__file__))
-	return os.path.join(scriptPath, "nestview.min.html")
+	return os.path.join(scriptPath, "nestview.html")
 
 def nvWrite(tree, file=sys.stdout, src=getDefaultSrc(), pattern="/* json */"):
 	# writes a tree into a Nestview HTML template

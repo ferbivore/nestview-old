@@ -93,6 +93,8 @@ Just don't try to view things where order is important - right now, expandable i
 
 ### Build procedure
 
+*Note: I've changed nestview.py so this is no longer needed, for now*
+
 Since in Europe we're too poor to afford Makefiles and node.js, the `nestview.html` file needs to be minified manually for now. Basically, throw it into [this generic but excellent HTML minifier](http://kangax.github.io/html-minifier/) and paste the results into `nestview.min.html`.
 
 Or just `cp nestview.html nestview.min.html` if you have better things to do. Minification isn't a particularly big reduction.
