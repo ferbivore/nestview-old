@@ -62,16 +62,26 @@ def nvToFolder(obj, name=None):
 	if(hasattr(obj, "__float__")):
 		return str(obj)
 	# test for strings (TODO: find a more general test)
+	# also TODO: figure out if unicode strings work at all
 	if(isinstance(obj, str) or isinstance(obj, unicode)):
 		return obj
 	# test for dicts and other dict-like thing
 	if(hasattr(obj, "iteritems")):
 		folder = Folder(name, [])
 		for key, val in obj.iteritems():
-			if(isinstance(val, str) or isinstance(val, unicode)):
-				folder.add(key + " = " + val)
+			valToFolder = nvToFolder(val, key)
+			# if(isinstance(val, str) or isinstance(val, unicode)):
+			# 	folder.add(key + " = " + val)
+			# elif(hasattr(val, "__float__")):
+			# 	folder.add(key + " = " + str(val))
+			# else:
+			# 	folder.add(nvToFolder(val, key))
+			if(isinstance(valToFolder, str) or isinstance(valToFolder, unicode)):
+				folder.add(key + " = " + valToFolder)
+			elif(isinstance(valToFolder, Folder)):
+				folder.add(valToFolder)
 			else:
-				folder.add(nvToFolder(val, key))
+				folder.add(Folder(key, [valToFolder]))
 		return folder
 	# test for lists et al.
 	if(hasattr(obj, "__iter__")):
@@ -80,10 +90,10 @@ def nvToFolder(obj, name=None):
 			folder.add(nvToFolder(thing))
 		return folder
 	# objects
-	if(hasattr(obj, "__dict__") and (not isfunction(obj)) and not (isbuiltin(obj))):
+	if(hasattr(obj, "__dict__") and (not isfunction(obj)) and (not isbuiltin(obj))):
 		oname = repr(obj).replace("<", "(").replace(">", ")")
 		return nvToFolder(obj.__dict__, oname)
-	# anything else - functions & whatever else
+	# functions & whatever else
 	return repr(obj).replace("<", "(").replace(">", ")")
 
 def nvToTree(*args):
