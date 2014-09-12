@@ -36,16 +36,25 @@ The second part of Nestview is `nvbase.py`, a Python module for representing tre
 
 Subitems can be either Folders or strings. Note that you do need to at least pass it empty arrays, at least until I narrow down that weird recursion bug.
 
-The third part of Nestview is `NVCommon`, a library for creating small tools like nvtree and nvini. It handles common command line arguments and implements things like the HTTP server. Using it involves subclassing NVCommon and overriding a couple of functions:
+## nvcommon
+
+The third part of Nestview is `nvcommon.py`, a Python module for creating small tools like the included `nvtree` and `nvini`. It handles common command line arguments and implements things like an HTTP server. Using it involves subclassing NVCommon and overriding a couple of functions:
 
 	def setupArgumentParser(self)
 	def generateData(self)
 
-The first one gives you a chance to declare your own argparse arguments, and the second one is expected to return an array of arrays, ready to plug into the viewer as `dataTree`. Just so you get a mental picture:
+The first one gives you a chance to declare your own argparse arguments, and the second one is expected to return an array of Nestview nodes ready to plug into the viewer.
 
-	[folder1.toTree(), folder2.toTree(), ...]
+`nvcommon.py` also includes `NVSimple`, a helper class that lets you preview Python data structures in Nestview. You can load a server to preview a data structure in just two lines:
 
-Also see the "Viewing Python data structures" section - in a pinch, you can just use NVSimple to write your script.
+	from nvcommon import NVSimple
+	NVSimple(data).serve()
+
+Where `data` is something like this:
+
+	[1, [2, 3], {4: [5, 6]}]
+
+It supports strings, lists, dicts, functions, classes and objects, and a lot of things similar to those (e.g. Unicode strings, tuples).
 
 
 ### Tools
@@ -89,43 +98,6 @@ nvini is really just a toy written as a test for NVCommon. You feed it a ConfigP
 
 Throw it an XML file (or an HTML file and the `--html` command line option) and it'll turn it into a Nestview tree. You can use `-T` to make things a bit more readable, or pass it a URL and `-u` to automatically download a file.
 
-
-### Viewing Python data structures
-
-`nvcommon.py` includes `NVSimple`, a helper class that lets you preview Python data structures (lists, dicts, objects...) in Nestview. You can load a server to preview a data structure in just two lines:
-
-	data = [1, [2, 3], {4: [5, 6]}]
-
-	from nvcommon import NVSimple
-	NVSimple(data).serve()
-
-
-### Things to do
-
-* write more tools! how about a reddit client?
-* split `nestview.html` into 3 files and get a build system working
-* figure out ways to make getting data into the viewer easier
-* set git up and push all of this crap onto GitHub so I can have docs and bug tracking like a normal human being
-* interactivity? we do have a web server
-* make the viewer embeddable
-* change the data structures so ordering is maintained
-
-
-### Things I already did
-
-* wrote the HTML/JS viewer and Python backend
-* gave the viewer nice expand/collapse links
-* made the viewer work on mobile
-* refactored everything several times so we can have nice abstractions
-* wrote a tool for viewing the filesystem
-* integrated an HTTP server into said tool
-* ripped out the DRY-prone parts out of said tool, including HTTP server, and turned them into a library so I can build other tools with HTTP servers
-* used said library to write an INI viewer that worked on the first try
-* implemented proper filtering in the viewer - it kicks ass
-* wrote a tool for viewing XML (and HTML)
-* implemented functions to make Nestview usable from an interactive Python console
-* implemented NVSimple on top of said functions
-* refactored Folder so we can have
 
 ### Status
 
