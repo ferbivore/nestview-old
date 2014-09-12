@@ -12,6 +12,7 @@ nvVersion = "0.4"
 # try to open a link/file with cygstart, xdg-open or open
 def openLink(link, fatal=False):
 	from subprocess import call
+	print("Attempting to open: %s" % link, file=sys.stderr)
 	# note: keep cygstart first
 	# for some reason, xdg-open doesn't register as missing on my setup
 	for cmd in ["cygstart", "xdg-open", "open"]:
@@ -34,7 +35,7 @@ def openLink(link, fatal=False):
 #  generateHTML(outfile)
 
 class NVCommon():
-	def __init__(self, name, version="0.1", description=None):
+	def __init__(self, name="NVCommon", version=nvVersion, description=None):
 		# instance variables
 		self.name = name
 		self.version = version
@@ -62,7 +63,7 @@ class NVCommon():
 		# things to do after parsing arguments
 		self.setupFinal()
 
-	def run(self, server=False, server_port=8000):
+	def run(self, server=False, server_port=8000, autoopen=False, autodelete=False, outfile=None):
 		# run the program in one of the three modes
 		# (HTTP server, temporary file or normal)
 		if self.args.server or server:
@@ -86,14 +87,14 @@ class NVCommon():
 					server_port = self.args.server
 				httpd = HTTPServer(("", server_port), NVHandler)
 				print("Server started. Use Ctrl-C to shut down.", file=sys.stderr)
-				if(self.args.open):
+				if(self.args.open or autoopen):
 					openLink("http://127.0.0.1:" + str(server_port))
 				httpd.serve_forever()
 			except KeyboardInterrupt:
 				httpd.socket.close()
 				print("Server stopped.", file=sys.stderr)
 
-		elif self.args.open:
+		elif self.args.open or autoopen:
 			import tempfile, subprocess
 			from time import sleep
 
@@ -101,17 +102,22 @@ class NVCommon():
 				self.generateHTML(outfile=f)
 				f.flush() # required because we're not closing the file yet
 				openLink(f.name, fatal=True)
-				if self.args.autodelete:
+				if self.args.autodelete or autodelete:
 					sleep(3)
 				else:
 					raw_input("Press Enter to delete the file after it loads.")
 
 		else:
-			if(self.args.outfile == None):
+			if(self.args.outfile):
+				outfile = self.args.outfile
+			if(outfile == None):
 				self.generateHTML()
 			else:
-				with io.open(self.args.outfile, "w", encoding="utf-8") as f:
-					self.generateHTML(outfile=f)
+				if(isinstance(outfile, file)):
+					self.generateHTML(outfile=outfile)
+				else:
+					with io.open(outfile, "w", encoding="utf-8") as f:
+						self.generateHTML(outfile=f)
 
 	def generateHTML(self, outfile=sys.stdout):
 		nvWrite(self.generateData(), outfile)
@@ -123,10 +129,15 @@ class NVCommon():
 	def setupFinal(self):
 		pass
 
-def nvServer(data, port=8000):
-	# quickly starts up a server using the given data tree
-	class NVQuickServer(NVCommon):
-		def generateData(self):
-			return data
-	nvapp = NVQuickServer("nvServer", "0.1")
-	nvapp.run(True, port)
+class NVSimple(NVCommon):
+	def __init__(self, data):
+		self.datatree = nvToTree(data)
+		NVCommon.__init__(self, "NVSimple")
+	def generateData(self):
+		return self.datatree
+	def serve(self, port=8000, autoopen=False):
+		self.run(server=True, server_port=port, autoopen=autoopen)
+	def open(self):
+		self.run(autoopen=True)
+	def save(self, outfile=sys.stdout):
+		self.run(outfile=outfile)
