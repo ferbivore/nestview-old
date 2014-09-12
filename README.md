@@ -36,7 +36,7 @@ The second part of Nestview is `nvbase.py`, a Python module for representing tre
 
 Subitems can be either Folders or strings. Note that you do need to at least pass it empty arrays, at least until I narrow down that weird recursion bug.
 
-## nvcommon
+#### nvcommon
 
 The third part of Nestview is `nvcommon.py`, a Python module for creating small tools like the included `nvtree` and `nvini`. It handles common command line arguments and implements things like an HTTP server. Using it involves subclassing NVCommon and overriding a couple of functions:
 
