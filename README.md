@@ -1,32 +1,42 @@
 Nestview is a web-based viewer for nested data - folder hierarchies, XML, whatever you can represent as a hierarchy of text nodes. It's inspired by [Nested](http://orteil.dashnet.org/nested).
 
-![Screenshot of Nestview rendering an OPML document](http://i.imgur.com/HGbyYuU.png)
+![Screenshot of Nestview 0.3 rendering an OPML document](http://i.imgur.com/HGbyYuU.png)
 
 ### Architecture
 
-Technically, the viewer is just `nestview.html`. On page load, it looks for an array called `dataTree`. You're supposed to throw Nestview trees into the array, and they'll show up as top-level. Conveniently, the viewer already has `dataTree=/* json */;` in it, so all you need to do is search for `/* json */` and replace it with a JSON array.
+#### Viewer
 
-A Nestview tree is a simple array that looks like this:
+The viewer template is an HTML file, `nestview.html`. On page load, it looks for an array called `dataTree`. You're supposed to throw Nestview trees into the array, and they'll show up as top-level. Conveniently, the viewer already has the line `dataTree=/* json */;` in it, so all you need to do to get a working viewer is search for `/* json */` and replace it with an array of Nestview nodes.
 
-	[name, [subtree, ...], [textnode, ...]]
+A Nestview node can be a tree or a text node. Trees are simple JSON arrays that look like this:
+
+	[name, subnodes...]
+
+Text nodes are simple JSON strings. Take this tree as an example:
+
+	["top level", ["2nd level", "1", ["3rd level", "2", "3"], "4"]]
 
 It gets rendered like this:
 
-	- name
-		+ subtree name
-		+ ...
-		textnode
-		...
+	- top level
+		- 2nd level
+			1
+			- 3rd level
+				2
+				3
+		4
 
-Basically: trees have a name, can contain other trees and text nodes, and can be expanded or collapsed. Just like files and folders on a filesystem.
+Basically, trees have a name, can contain other trees and text nodes, and can be expanded or collapsed. Just like files and folders on a filesystem.
 
-The second part of Nestview is a Python library, in `nestview.py`. It defines a Folder class, which maps into a Nested tree through the .toTree() method. The trees produced by .toTree() can be passed through json.dumps() to get something to plug into the dataTree array. You instantiate Folder like this:
+#### nvbase
 
-	Folder(name, [subfolders...], [items...])
+The second part of Nestview is `nvbase.py`, a Python module for representing trees and converting them to JSON. It defines a Folder class, which maps into a tree through the .toTree() method. The trees produced by .toTree() can be passed through json.dumps() to get something to plug into the dataTree array. You instantiate Folder like this:
 
-The subfolders should be other Folder instances, and items should be strings. Note that you do need to at least pass it empty arrays, at least until I narrow down that weird recursion bug.
+	Folder(name, [subitems...])
 
-The third part of Nestview is NVCommon, a library for creating small tools like nvtree and nvini. It handles common command line arguments and implements things like the HTTP server. Using it involves subclassing NVCommon and overriding a couple of functions:
+Subitems can be either Folders or strings. Note that you do need to at least pass it empty arrays, at least until I narrow down that weird recursion bug.
+
+The third part of Nestview is `NVCommon`, a library for creating small tools like nvtree and nvini. It handles common command line arguments and implements things like the HTTP server. Using it involves subclassing NVCommon and overriding a couple of functions:
 
 	def setupArgumentParser(self)
 	def generateData(self)
@@ -35,9 +45,7 @@ The first one gives you a chance to declare your own argparse arguments, and the
 
 	[folder1.toTree(), folder2.toTree(), ...]
 
-You can also override `def generateHTML(self, outfile)` and call `nvWrite` from there or something, but that's so 10 minutes ago.
-
-Also see the "Viewing Python data structures" section - in a pinch, you can just use nvToTree() and nvServer() to write your script, and extend it later if you need to.
+Also see the "Viewing Python data structures" section - in a pinch, you can just use NVSimple to write your script.
 
 
 ### Tools
@@ -69,9 +77,9 @@ nvtree is a Python script that uses Nestview to give you a folder tree - a slow 
 	  -e EXCLUDE [EXCLUDE ...], --exclude EXCLUDE [EXCLUDE ...]
 	                        filename substrings to exclude from the listing
 
-Overkill? Probably. But I can do `nvtree -qs` and browse folders from my phone now. Or `nvtree -Oqa` and have Chrome open up. Or `nvtree -Oqs` and do both, because why not.
+Overkill? Probably. But I can do `nvtree -s` and browse folders from my phone now. Or `nvtree -O` and have Chrome open up. Or `nvtree -Os` and do both, because why not.
 
-Note: just don't do it on really densely nested folders, at least not on Windows. And beware of symlinks. And use -e to exclude things like `.git` folders. (Although Chrome seems to cope well with displaying my massive home folder even on low-end hardware, it takes a bloody long time for nvtree to go through it.)
+Note: just don't do it on _really_ densely nested folders, at least not on Windows. And beware of symlinks. And use -e to exclude things like `.git` folders. (Although Chrome seems to cope well with displaying my massive home folder even on low-end hardware, it takes a bloody long time for nvtree to go through it.)
 
 #### nvini
 
@@ -84,22 +92,12 @@ Throw it an XML file (or an HTML file and the `--html` command line option) and 
 
 ### Viewing Python data structures
 
-`nvcommon.py` includes a few functions that let you convert simple Python objects like strings, dicts, lists and objects into a Nestview tree and view it, straight from an interactive console. To wit:
+`nvcommon.py` includes `NVSimple`, a helper class that lets you preview Python data structures (lists, dicts, objects...) in Nestview. You can load a server to preview a data structure in just two lines:
 
-	from nvcommon import nvServer, nvToTree
-	test = [1, [2, 3], {4: [5, 6]}]
-	nvServer(nvToTree(test))
+	data = [1, [2, 3], {4: [5, 6]}]
 
-Just don't try to view things where order is important - right now, expandable items are listed first in the viewer (a consequence of how the data structures are defined).
-
-
-### Build procedure
-
-*Note: I've changed nestview.py so this is no longer needed, for now*
-
-Since in Europe we're too poor to afford Makefiles and node.js, the `nestview.html` file needs to be minified manually for now. Basically, throw it into [this generic but excellent HTML minifier](http://kangax.github.io/html-minifier/) and paste the results into `nestview.min.html`.
-
-Or just `cp nestview.html nestview.min.html` if you have better things to do. Minification isn't a particularly big reduction.
+	from nvcommon import NVSimple
+	NVSimple(data).serve()
 
 
 ### Things to do
@@ -125,4 +123,23 @@ Or just `cp nestview.html nestview.min.html` if you have better things to do. Mi
 * used said library to write an INI viewer that worked on the first try
 * implemented proper filtering in the viewer - it kicks ass
 * wrote a tool for viewing XML (and HTML)
-* implemented functions in nvcommon to make Nestview usable from an interactive Python console
+* implemented functions to make Nestview usable from an interactive Python console
+* implemented NVSimple on top of said functions
+* refactored Folder so we can have
+
+### Status
+
+Current feature list:
+
+* HTML viewer with filtering and mobile support
+* Python modules for creating tools that use said viewer
+  * with multiple ways of getting data into it
+  * and easy-to-use abstractions
+  * and argument parsing
+  * and an HTTP server
+* example tools
+  * filesystem viewer
+  * XML/HTML viewer
+  * INI viewer
+
+See [bug tracker](https://github.com/ferbivore/nestview/issues) for details.
