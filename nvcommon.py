@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from argparse import ArgumentParser
-from nestview import nvWrite, Folder
+from nvbase import nvWrite, Folder
 import sys, os, io
 nvVersion = "0.4"
 
