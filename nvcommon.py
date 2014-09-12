@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from argparse import ArgumentParser
-from nvbase import nvWrite, Folder
+from nvbase import Folder, nvWrite, nvToTree, nvToFolder
 import sys, os, io
 nvVersion = "0.4"
 
@@ -130,49 +130,3 @@ def nvServer(data, port=8000):
 			return data
 	nvapp = NVQuickServer("nvServer", "0.1")
 	nvapp.run(True, port)
-
-def nvGenericToFolder(obj, name=None):
-	# turns a simple Python datatype into a Folder
-	# get a valid type name to use if we don't have a variable name
-	if name == None:
-		# yeah, ugly, but Python doesn't give me usable type names
-		name = "(" + repr(type(obj)).partition("'")[2].rpartition("'")[0] + ")"
-	# test for numbers
-	if(hasattr(obj, "__float__")):
-		return str(obj)
-	# test for strings (TODO: find a more general test)
-	if(isinstance(obj, str) or isinstance(obj, unicode)):
-		return obj
-	# test for dicts and other dict-like thing
-	if(hasattr(obj, "iteritems")):
-		folder = Folder(name, [])
-		for key, val in obj.iteritems():
-			if(isinstance(val, str) or isinstance(val, unicode)):
-				folder.add(key + " = " + val)
-			else:
-				folder.add(nvGenericToFolder(val, key))
-		return folder
-	# test for lists et al.
-	if(hasattr(obj, "__iter__")):
-		folder = Folder(name, [])
-		for thing in obj:
-			folder.add(nvGenericToFolder(thing))
-		return folder
-	# objects
-	if(hasattr(obj, "__dict__")):
-		oname = repr(obj).replace("<", "(").replace(">", ")")
-		return nvGenericToFolder(obj.__dict__, oname)
-	# anything else - is there anything else?
-	return repr(obj).replace("<", "(").replace(">", ")")
-
-def nvToTree(*args):
-	# turns a simple Python datatype (or a few) into a Nestview data tree
-	# ready to plug into nvcommon.nvStartServer
-	datatree = []
-	for obj in args:
-		fo = nvGenericToFolder(obj)
-		if isinstance(fo, Folder):
-			datatree.append(fo.toTree())
-		else:
-			datatree.append(fo)
-	return datatree
