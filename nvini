@@ -18,9 +18,9 @@ def main(inifile):
 	# get sections and loop over them
 	sections = conf.sections()
 	for section in sections:
-		secf = Folder(section, [], [])
+		secf = Folder(section, [])
 		for name, value in conf.items(section):
-			optf = Folder(name, [], [value])
+			optf = Folder(name, [value])
 			secf.add(optf)
 		# tree out the section folder
 		data.append(secf.toTree())

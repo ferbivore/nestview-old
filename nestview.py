@@ -1,33 +1,45 @@
 from __future__ import print_function
 import json, sys, io, os
+nvVersion = "0.4"
 
 class Folder:
-	# giving [] as default initializers seems to cause problems
-	# (they sometimes inherit values instead, for some reason)
-	def __init__(self, name, subfolders, items):
+	def __init__(self, name, *args):
 		self.name = name
-		self.subfolders = subfolders # Folder instances
-		self.items = items # strings
+		self.subitems = []
+		for arg in args:
+			self.subitems.extend(arg)
 
 	def add(self, obj):
-		if isinstance(obj, Folder):
-			self.subfolders.append(obj)
-			return self.subfolders[-1]
-		elif isinstance(obj, str) or isinstance(obj, unicode):
-			self.items.append(obj)
+		self.subitems.append(obj)
+		return self.subitems[-1]
 
 	def toTree(self):
+		# returns a Nestview tree - an array of arrays and strings
 		tree = [self.name]
-		for subfolder in self.subfolders:
-			tree.append(subfolder.toTree())
-		tree.extend(self.items)
+		for subitem in self.subitems:
+			# folders get .toTree()d and appended to the tree
+			if isinstance(subitem, Folder):
+				tree.append(subitem.toTree())
+			# strings get appended directly to the tree
+			elif isinstance(subitem, str) or isinstance(subitem, unicode):
+				tree.append(subitem)
 		return tree
 
-	def subfolderByName(self, name):
-		for subfolder in self.subfolders:
-			if(name == subfolder.name):
-				return subfolder
-		return None
+	def subfolders(self):
+		# returns all immediate subfolders in an array
+		subfolders = []
+		for subitem in self.subitems:
+			if isinstance(subitem, Folder):
+				subfolders.append(subitem)
+		return subfolders
+
+	def textitems(self):
+		# returns all immediate string subitems
+		textitems = []
+		for subitem in self.subitems:
+			if isinstance(subitem, str) or isinstance(subitem, unicode):
+				textitems.append(subitem)
+		return textitems
 
 def getDefaultSrc():
 	# finds the default template, nestview..min.html

@@ -22,7 +22,7 @@ def populate(path, folderobject, excludes, quiet=False):
 		print("analyzing: " + path, file=sys.stderr)
 	for sfname in subfolders(path):
 		shortname = os.path.split(sfname)[1]
-		sfobject = folderobject.add(Folder(shortname, [], []))
+		sfobject = folderobject.add(Folder(shortname, []))
 		populate(os.path.abspath(sfname), sfobject, excludes, quiet)
 	for fname in files(path):
 		shortname = os.path.split(fname)[1]
@@ -33,7 +33,7 @@ def main(basepath, excludes = [], quiet=False):
 	# do some processing on the basepath
 	basepath = os.path.abspath(os.path.expanduser(basepath))
 	# create the topmost folder object and populate() it
-	basefolder = Folder(basepath, [], [])
+	basefolder = Folder(basepath, [])
 	populate(basepath, basefolder, excludes, quiet)
 	# convert it to a Nestview tree
 	tree = basefolder.toTree()

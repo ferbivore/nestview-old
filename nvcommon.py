@@ -3,7 +3,7 @@ from __future__ import print_function
 from argparse import ArgumentParser
 from nestview import nvWrite, Folder
 import sys, os, io
-nvVersion = "0.3"
+nvVersion = "0.4"
 
 # this is a common base for all the Nestview utils.
 # it handles argument parsing and all that crap.
@@ -145,7 +145,7 @@ def nvGenericToFolder(obj, name=None):
 		return obj
 	# test for dicts and other dict-like thing
 	if(hasattr(obj, "iteritems")):
-		folder = Folder(name, [], [])
+		folder = Folder(name, [])
 		for key, val in obj.iteritems():
 			if(isinstance(val, str) or isinstance(val, unicode)):
 				folder.add(key + " = " + val)
@@ -154,7 +154,7 @@ def nvGenericToFolder(obj, name=None):
 		return folder
 	# test for lists et al.
 	if(hasattr(obj, "__iter__")):
-		folder = Folder(name, [], [])
+		folder = Folder(name, [])
 		for thing in obj:
 			folder.add(nvGenericToFolder(thing))
 		return folder
