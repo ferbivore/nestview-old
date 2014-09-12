@@ -1,5 +1,6 @@
 from __future__ import print_function
 import json, sys, io, os
+from inspect import isfunction, isbuiltin
 nvVersion = "0.4"
 
 class Folder:
@@ -79,10 +80,10 @@ def nvToFolder(obj, name=None):
 			folder.add(nvToFolder(thing))
 		return folder
 	# objects
-	if(hasattr(obj, "__dict__")):
+	if(hasattr(obj, "__dict__") and (not isfunction(obj)) and not (isbuiltin(obj))):
 		oname = repr(obj).replace("<", "(").replace(">", ")")
 		return nvToFolder(obj.__dict__, oname)
-	# anything else - is there anything else?
+	# anything else - functions & whatever else
 	return repr(obj).replace("<", "(").replace(">", ")")
 
 def nvToTree(*args):
