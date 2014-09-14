@@ -1,12 +1,12 @@
-Nestview is a web-based viewer for nested data - folder hierarchies, XML, whatever you can represent as a hierarchy of text nodes. It's inspired by [Nested](http://orteil.dashnet.org/nested).
+Nestview is a web-based viewer for nested data - folder hierarchies, Python objects, XML, whatever you can represent as a hierarchy of text nodes. It's written in HTML, JavaScript and Python, and inspired by [Nested](http://orteil.dashnet.org/nested).
 
-![Screenshot of Nestview 0.3 rendering an OPML document](http://i.imgur.com/HGbyYuU.png)
+![Screenshot of Nestview 0.4 rendering a Python class instance](http://i.imgur.com/OPQJgSc.png)
 
 ### Architecture
 
 #### Viewer
 
-The viewer template is an HTML file, `nestview.html`. On page load, it looks for an array called `dataTree`. You're supposed to throw Nestview trees into the array, and they'll show up as top-level. Conveniently, the viewer already has the line `dataTree=/* json */;` in it, so all you need to do to get a working viewer is search for `/* json */` and replace it with an array of Nestview nodes.
+The viewer template is an HTML file, `nestview.html`. On page load, it looks for an array called `dataTree`. You're supposed to throw Nestview nodes into the array, and they'll show up as top-level. Conveniently, the viewer already has the line `dataTree=/* json */;` in it, so all you need to do to get a working viewer is search for `/* json */` and replace it with an array of Nestview nodes.
 
 A Nestview node can be a tree or a text node. Trees are simple JSON arrays that look like this:
 
