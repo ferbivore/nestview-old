@@ -130,8 +130,9 @@ class NVCommon():
 		pass
 
 class NVSimple(NVCommon):
-	def __init__(self, *data):
-		self.datatree = nvToTree(*data)
+	def __init__(self, *data, **kwargs):
+		# kwargs is used mainly for maxdepth
+		self.datatree = nvToTree(*data, **kwargs)
 		NVCommon.__init__(self, "NVSimple")
 	def generateData(self):
 		return self.datatree
